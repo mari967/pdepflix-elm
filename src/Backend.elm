@@ -1,7 +1,7 @@
 module Backend exposing(..)
 import Models exposing(Movie, Preferences)
 import String exposing(toUpper,words)
-import List exposing (map)
+import List exposing (map,any)
 
 completaAca = identity
 
@@ -70,4 +70,37 @@ peliculaLikeada id pelicula =
 -- **************
 
 calcularPorcentajeDeCoincidencia : Preferences -> List Movie -> List Movie
-calcularPorcentajeDeCoincidencia preferencias = completaAca
+calcularPorcentajeDeCoincidencia preferencias =  List.map (cambiarPorcentaje preferencias)
+
+cambiarPorcentaje : Preferences -> Movie -> Movie
+cambiarPorcentaje preferencias = trunc100 << palabrasClave preferencias.keywords << generoPredilecto preferencias.genre << actorPreferido preferencias.favoriteActor
+
+trunc100 : Movie -> Movie
+trunc100 pelicula = if pelicula.matchPercentage > 100 then
+                    {pelicula | matchPercentage = 100}
+                    else pelicula
+
+aumentarPorcentaje : Movie -> Int -> Movie
+aumentarPorcentaje pelicula aumento = {pelicula | matchPercentage = pelicula.matchPercentage + aumento}
+
+palabrasClave : String -> Movie -> Movie
+palabrasClave palabras pelicula = aumentarPorcentaje pelicula (List.sum (List.map (puntoPorPalabraClave (toUpper pelicula.title)) (List.map toUpper (String.words palabras))))
+
+puntoPorPalabraClave : String -> String -> Int
+puntoPorPalabraClave pelicula palabraClave = if any ((==) palabraClave) (words pelicula) then 
+                                             20 
+                                             else 0
+
+generoPredilecto : String -> Movie -> Movie
+generoPredilecto genero pelicula = if igualGenero genero pelicula then
+                                   aumentarPorcentaje pelicula 60
+                                   else pelicula
+actorPreferido : String -> Movie -> Movie
+actorPreferido actor pelicula = if actua actor pelicula then
+                                aumentarPorcentaje pelicula 50
+                                else pelicula
+
+actua : String -> Movie -> Bool
+actua actor pelicula = List.member actor (pelicula.actors)
+
+
