@@ -87,7 +87,7 @@ palabrasClave : String -> Movie -> Movie
 palabrasClave palabras pelicula = aumentarPorcentaje pelicula (List.sum (List.map (puntoPorPalabraClave (toUpper pelicula.title)) (List.map toUpper (String.words palabras))))
 
 puntoPorPalabraClave : String -> String -> Int
-puntoPorPalabraClave pelicula palabraClave = if any ((==) palabraClave) (words pelicula) then 
+puntoPorPalabraClave pelicula palabraClave = if (member palabraClave (words pelicula)) then 
                                              20 
                                              else 0
 
